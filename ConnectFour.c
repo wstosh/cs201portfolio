@@ -2,27 +2,12 @@
 #include <stdlib.h>
 
 void makeBoard(int rows, int cols, char** matrix) {
-  int i, j, p, q;
+  int i, j;
   for (i = 1; i <= rows; i++) {
     for (j = 1; j <= cols; j++) {
       matrix[i][j] = '*';
     }
   }
-  for (i = 1; i <= rows; i++) {
-    for (j = 1; j <= cols; j++) {
-      printf("| %c ", matrix[i][j]);
-    }
-    printf("|\n");
-    for (p = 1; p <= cols; p++) {
-      printf("____");
-    }
-    printf("_");
-    printf("\n");
-  }
-  for (q = 1; q <= cols; q++) {
-    printf("  %d ", q);
-  }
-  printf("\n \n");
 }
 
 void printBoard(int rows, int cols, char** board) {
@@ -41,7 +26,6 @@ void printBoard(int rows, int cols, char** board) {
   for (q = 1; q <= cols; q++) {
     printf("  %d ", q);
   }
-
 }
 
 int checkVert(int rows, int cols, char** board) {
@@ -81,35 +65,71 @@ int checkDiag(int rows, int cols, char** board) {
 return 0;
 }
 
+int checkWin(int rows, int cols, char** board) {
+  int winVert = 0;
+  int winHor = 0;
+  int winDiag = 0;
 
+  winVert = checkVert(rows, cols, board);
+  winHor = checkHor(rows, cols, board);
+  winDiag = checkDiag(rows, cols, board);
+
+  if (winVert == 1 || winHor == 1 || winDiag == 1) return 1;
+
+  return 0;
+}
+
+int validLocation(int move, int cols, char** board) {
+  if (board[1][move] == '*') return 1;
+  if (move < 1 || move > cols) return 2;
+
+  return 2;
+
+}
+
+void ComputerGameplay(int rows, int cols, char** board) {
+
+
+
+
+
+
+}
 
 int PlayerVsPlayer(int rows, int cols, char** board) {
   int i = 0;
   int win = 0;
   int move = 0;
+  int valid = 0;
 
   for (i = 0; i < (rows * cols); i++) {
     int j = rows;
-    if (i % 2 == 0) printf("Player 1, select a column number to place your piece.\n");
-    else printf("Player 2, select a column number to place your piece.\n");
+    if (i % 2 == 0) printf("Player 1, select a column number to place your piece: ");
+    else printf("Player 2, select a column number to place your piece: ");
     scanf("%d", &move);
-    while (move < 1 || move > cols) {
-      printf("Select a valid column number\n");
+    valid = validLocation(move, cols, board);
+    printf("\n");
+
+    while (valid == 2) {
+      printf("Select a valid location: ");
       scanf("%d", &move);
-      if (move > 0 && move <= cols) break;
+      valid = validLocation(move, cols, board);
     }
+
     while (board[j][move] != '*') {
       j--;
     }
-    while (board[j][move] == '*') {
-      if (i % 2 == 0) board[j][move] = 'O';
-      else board[j][move] = 'X';
-    }
+
+    if (i % 2 == 0) board[j][move] = 'O';
+    else board[j][move] = 'X';
+
+    printf("\n\n");
 
     printBoard(rows, cols, board);
     printf("\n\n");
 
-    win = checkVert(rows, cols, board);
+    win = checkWin(rows, cols, board);
+
     if (win == 1 && (i % 2 == 0)) {
       printf("Player 1 has won the game!\n");
       return 1;
@@ -119,25 +139,60 @@ int PlayerVsPlayer(int rows, int cols, char** board) {
         return 2;
     }
 
-    win = checkHor(rows, cols, board);
+  }
+
+return 0;
+
+}
+
+int PlayerVsComputer(int rows, int cols, char** board) {
+  int i = 0;
+  int j = 0;
+  int move = 0;
+  int valid = 0;
+
+  for (i = 0; i < (rows * cols); i++) {
+    j = rows;
+
+    if (i % 2 == 0) {
+      printf("Select a column number to place your piece: ");
+      scanf("%d", &move);
+      valid = validLocation(move, cols, board);
+      printf("\n");
+
+      while (valid == 2) {
+        printf("Select a valid location: ");
+        scanf("%d", &move);
+        valid = validLocation(move, cols, board);
+      }
+
+      while (board[j][move] != '*') {
+        j--;
+      }
+
+      board[j][move] == 'O';
+
+    }
+
+    else {
+      ComputerGameplay(rows, cols, board);
+    }
+
+    printf("\n\n");
+    printBoard(rows, cols, board);
+    printf("\n\n");
+
+    win = checkWin(rows, cols, board);
+
     if (win == 1 && (i % 2 == 0)) {
-      printf("Player 1 has won the game!\n");
+      printf("You have won the game!\n");
       return 1;
     }
     else if (win == 1 && (i % 2 == 1)) {
-        printf("Player 2 has won the game!\n");
+        printf("The computer has won the game!\n");
         return 2;
     }
 
-    win = checkDiag(rows, cols, board);
-    if (win == 1 && (i % 2 == 0)) {
-      printf("Player 1 has won the game!\n");
-      return 1;
-    }
-    else if (win == 1 && (i % 2 == 1)) {
-        printf("Player 2 has won the game!\n");
-        return 2;
-    }
   }
 
 return 0;
@@ -204,11 +259,12 @@ while (game == 0) {
     printf("\n");
     printf("__________________________");
     printf("\n \n");
-    char **matrix = (char **)malloc(numRows * sizeof(char *));
+    char **matrix = (char**)malloc(numRows * sizeof(char *));
     for (t = 1; t <= numRows; t++) {
-      matrix[t] = (char *)malloc(numCols * sizeof(char));
+      matrix[t] = (char*)malloc(numCols * sizeof(char));
     }
     makeBoard(numRows, numCols, matrix);
+    printBoard(numRows, numCols, matrix);
     whoWon = PlayerVsPlayer(numRows, numCols, matrix);
     if (whoWon == 0) printf("It is a tie!\n\n");
     if (whoWon == 1) gamesWonOne++;
@@ -256,21 +312,30 @@ while (game == 0) {
     printf("\n");
     printf("________________________");
     printf("\n \n");
-    char *matrix = (char *)malloc(numRows * numCols * sizeof(char));
-    makeBoard(numRows, numCols, &matrix);
+    char **matrix = (char **)malloc(numRows * sizeof(char *));
+    for (t = 1; t <= numRows; t++) {
+      matrix[t] = (char *)malloc(numCols * sizeof(char));
+    }
+    makeBoard(numRows, numCols, matrix);
+    printBoard(numRows, numCols, matrix);
+    whoWon = PlayerVsComputer(numRows, numCols, matrix);
+    if (whoWon == 0) printf("It is a tie!\n\n");
+    if (whoWon == 1) gamesWonPlayer++;
+    if (whoWon == 2) gamesWonComp++;
 
+    printf("Options:\n");
+    printf("(1) Play another game.\n");
+    printf("(2) Exit.\n");
+    printf("(Enter the integer value)\n\n");
+    scanf("%d", &decision);
+
+    if (decision == 2) game++;
 
   }
-
 
 }
 
 printf("Have a nice day!\n");
-
-
-
-
-
 
   return 0;
 }
