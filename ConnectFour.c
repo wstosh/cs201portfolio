@@ -8,14 +8,13 @@ char playerTwoPiece = 'X';
 char playerPiece = 'O';
 char CompPiece = 'X';
 
-char** copyBoard(int rows, int cols, char** matrix, char** board) {
+void copyBoard(int rows, int cols, char** matrix, char** board) {
   int i, j;
   for (i = 1; i <= rows; i++) {
     for (j = 1; j <= cols; j++) {
       matrix[i][j] = board[i][j];
     }
   }
- return matrix;
 }
 
 void placePiece(int row, int col, char piece, char** board) {
@@ -44,9 +43,15 @@ void printBoard(int rows, int cols, char** board) { // Function prints out the e
     printf("_");
     printf("\n");
   }
-  for (q = 1; q <= cols; q++) { // labels column numbers
-    printf("  %d ", q);
-  }
+  printf(" ");
+  for (q = 1; q <= cols; q++) {
+    if (q < 10) {
+      printf(" %d  ", q);
+    }
+    else if (q > 9) {
+      printf(" %d ", q);
+    }
+}
 }
 
 int checkVert(int rows, int cols, char** board, char piece) { // Function checks for vertical wins (Four-in-a-row)
@@ -130,7 +135,7 @@ int validLocation(int move, int cols, char** board) { // Function checks to see 
 
 }
 
-int nextOpenRow(int move, int rows, char** board) {
+int nextOpenRow(int move, int rows, char** board) { // Function finds next open row in specified column
   int j = rows;
   while (board[j][move] != '*') {
     j--;
@@ -138,42 +143,60 @@ int nextOpenRow(int move, int rows, char** board) {
   return j;
 }
 
-int scoreAdded(char array[], char piece) {
-  int score = 0;
-  int count = 0;
-  int countTwo = 0;
+int whichIndex(char window[]) {
+  int countComp = 0;
+  int countPlayer = 0;
   int countOpen = 0;
   int i = 0;
-  char opponent = playerPiece;
 
-  if (piece == playerPiece) {
-    opponent = CompPiece;
-  }
   for (i = 0; i < 4; i++) {
-    if (array[i] == '*') countOpen++;
-  }
-  for (i = 0; i < 4; i++) {
-    if (array[i] == piece) count++;
+    if ((window[i] != 'O') || (window[i] != 'X')) countOpen++;
   }
 
   for (i = 0; i < 4; i++) {
-    if (array[i] == opponent) countTwo++;
+    if (window[i] == playerPiece) countPlayer++;
   }
 
-  if (count == 4) score += 100;
-  else if ((count == 3 && countOpen == 1)) score += 7;
-  else if ((count == 2 && countOpen == 2)) score += 4;
+  for (i = 0; i < 4; i++) {
+    if (window[i] == CompPiece) countComp++;
+  }
 
-  if ((countTwo == 3 && countOpen == 1)) score += -6;
+  if ((countComp == 3) && (countOpen == 1)) {
+    for (i = 0; i < 4; i++) {
+      if (window[i] == '*') {
+        return i+1;
+      }
+    }
+  }
 
-  return score;
+  else if ((countPlayer == 3) && (countOpen == 1)) {
+    for (i = 0; i < 4; i++) {
+      if (window[i] == '*') {
+        return i+1;
+      }
+    }
+  }
+
+  if ((countComp == 2) && (countOpen == 2)) {
+    for (i = 0; i < 4; i++) {
+      if (window[i] == '*') {
+        return i+1;
+      }
+    }
+  }
+
+
+
+  return 0;
 }
 
-
-
-
-int boardScore(int rows, int cols, char** board, char piece) {
-  int score = 0;
+int bestMove(int rows, int cols, char** board) {
+  int index = -1;                                                     // Function looks at windows of four spots at each board position in a game
+  int columnH = 0;
+  int columnV = 0;
+  int columnPD = 0;
+  int columnND = 0;                                                             // (Horizontally, Vertically, Diagonally)
+  int randCol = ((rand() % cols) + 1);                                          // Ultimately, a score is made by sending the windows of four to the scoreAdded function
   char rowArr[cols];
   char colArr[rows];
   char window[4];
@@ -193,10 +216,18 @@ int boardScore(int rows, int cols, char** board, char piece) {
         for (c = p; c < p + 4; c++) {
           window[x] = rowArr[c];
           x++;
-          score += scoreAdded(window, piece);
         }
+
+        index = whichIndex(window);
+        index -= 1;
+        if (index >= 0) {
+        columnH = j + index;
       }
-  }
+        if ((columnH > 0) && (columnH <= cols)) break;
+      }
+      if ((columnH > 0) && (columnH <= cols)) break;
+    }
+
 
   for (i = 1; i <= cols; i++) { // Vertical Score Count
     for (j = 1; j <= rows; j++) {
@@ -207,9 +238,15 @@ int boardScore(int rows, int cols, char** board, char piece) {
         for (c = p; c < p + 4; c++) {
           window[x] = colArr[c];
           x++;
-          score += scoreAdded(window, piece);
         }
+        index = whichIndex(window);
+        index -= 1;
+        if (index >= 0) {
+          columnV = i;
+        }
+        if ((columnV > 0) && (columnV <= cols)) break;
       }
+      if ((columnV > 0) && (columnV <= cols)) break;
   }
 
   for (i = 1; i <= rows - 3; i++) { // Negatively Sloped Score Count
@@ -218,9 +255,15 @@ int boardScore(int rows, int cols, char** board, char piece) {
       for (t = 0; t < 4; t++) {
       window[x] = board[i+t][j+t];
       x++;
-      score += scoreAdded(window, piece);
       }
+      index = whichIndex(window);
+      index -= 1;
+      if (index >= 0) {
+      columnH = j + index;
     }
+      if ((columnND > 0) && (columnND <= cols)) break;
+    }
+    if ((columnND > 0) && (columnND <= cols)) break;
   }
 
   for (i = 1; i <= rows - 3; i++) { // Positively Sloped Score Count
@@ -229,15 +272,27 @@ int boardScore(int rows, int cols, char** board, char piece) {
       for (t = 0; t < 4; t++) {
       window[x] = board[i+3-t][j+t];
       x++;
-      score += scoreAdded(window, piece);
       }
+      index = whichIndex(window);
+      index -= 1;
+      if (index >= 0) {
+      columnH = j + index;
     }
+      if ((columnPD > 0) && (columnPD <= cols)) break;
+    }
+    if ((columnPD > 0) && (columnPD <= cols)) break;
   }
 
-return score;
+  if (columnH > 0 && columnH <= cols) return columnH;
+  else if (columnV > 0 && columnV <= cols) return columnV;
+  else if (columnND > 0 && columnND <= cols) return columnND;
+  else if (columnPD > 0 && columnPD <= cols) return columnPD;
+  else return randCol;
 }
 
-int miniMax(char** board, int rows, int cols, int distance, bool maximizingPlayer, int arr[]) {
+/*
+int* miniMax(char** board, int rows, int cols, int distance, bool maximizingPlayer) {  // https://github.com/KeithGalli/Connect4-Python/blob/master/connect4_with_ai.py
+                                                                                        // Recursive function that assigns heuristic values to leaf nodes
   int gamePlayer = 0;
   int gameComp = 0;
   int game = 0;
@@ -247,10 +302,12 @@ int miniMax(char** board, int rows, int cols, int distance, bool maximizingPlaye
   int score = 0;
   int i = 0;
   int t = 0;
+  static int arr[2];
+  int *ptr;
 
-  char **matrix = (char **)malloc(rows * sizeof(char *));
+  char **matrix = (char **)malloc((rows + 1) * sizeof(char *));
   for (t = 1; t <= rows; t++) {
-    matrix[t] = (char *)malloc(cols * sizeof(char));
+    matrix[t] = (char *)malloc((cols + 1) * sizeof(char));
   }
 
   game = gameOver(rows, cols, board);
@@ -259,12 +316,22 @@ int miniMax(char** board, int rows, int cols, int distance, bool maximizingPlaye
 
   if (distance == 0 || game == 1) {
     if (game == 1) {
-      if (gameComp == 1) return 10000000;
-      else if (gamePlayer == 1) return -10000000;
-      else return 0;
+      if (gameComp == 1) {
+        arr[1] = 1000000;
+        return arr;
+      }
+      else if (gamePlayer == 1) {
+        arr[1] = -1000000;
+        return arr;
+      }
+      else {
+        arr[1] = 0;
+        return arr;
+      }
     }
     else {
-      return (boardScore(rows, cols, board, CompPiece));
+      arr[1] = boardScore(rows, cols, board, CompPiece);
+      return arr;
     }
   }
 
@@ -273,17 +340,19 @@ int miniMax(char** board, int rows, int cols, int distance, bool maximizingPlaye
     for (i = 1; i <= cols; i++) { // loop that iterates through all valid columns
       if ((board[1][i]) == '*') {
         row = nextOpenRow(i, rows, board);
-        matrix = copyBoard(rows, cols, matrix, board);
+        copyBoard(rows, cols, matrix, board);
         placePiece(row, i, CompPiece, matrix);
-        score = miniMax(matrix, rows, cols, distance - 1, false, arr);
+        ptr = miniMax(matrix, rows, cols, distance - 1, false);
+        score = *ptr;
         if (score > value) {
           value = score;
           column = i;
+          arr[0] = column;
+          arr[1] = value;
         }
       }
     }
-    arr[0] = column;
-    return score;
+    return arr;
   }
 
   else { //Minimizing Player
@@ -291,29 +360,32 @@ int miniMax(char** board, int rows, int cols, int distance, bool maximizingPlaye
     for (i = 1; i <= cols; i++) { // loop that iterates through all valid columns
       if ((board[1][i]) == '*') {
         row = nextOpenRow(i, rows, board);
-        matrix = copyBoard(rows, cols, matrix, board);
+        copyBoard(rows, cols, matrix, board);
         placePiece(row, i, playerPiece, matrix);
-        score = miniMax(matrix, rows, cols, distance - 1, true, arr);
+        ptr = miniMax(matrix, rows, cols, distance - 1, true);
+        printf("before: %d\n", score);
+        score = *ptr;
+        printf("after: %d\n", score);
         if (score < value) {
           value = score;
           column = i;
+          arr[0] = column;
+          arr[1] = value;
         }
       }
     }
-    arr[0] = column;
-    return score;
+    return arr;
   }
 }
 
+*/
 void ComputerGameplay(int rows, int cols, char** board) { // Function that controls the computers gameplay
-    int arr[1];
-    int column = 0;
-    int row = 0;                                                      // Ultimately places a piece in the best spot
-    int minimaxScore = 0;
-    minimaxScore = miniMax(board, rows, cols, 4, true, arr);
-    column = arr[0];
-    row = nextOpenRow(column, rows, board);
-    placePiece(row, column, CompPiece, board);
+  int column = 0;
+  int row = 0;
+                                                          // Ultimately places a piece in the best spot
+  column = bestMove(rows, cols, board);
+  row = nextOpenRow(column, rows, board);
+  placePiece(row, column, CompPiece, board);
 
 }
 
@@ -402,6 +474,7 @@ int PlayerVsComputer(int rows, int cols, char** board) { // Function that contro
 
       board[j][move] = playerPiece;
 
+
     }
 
     else {
@@ -451,10 +524,16 @@ int main() {
   printf("(2) Player vs Computer \n");
   scanf("%d", &gameMode);
 
+  while ((gameMode < 1) || (gameMode > 2)) {
+    printf("Error: Enter a valid option: ");
+    scanf("%d", &gameMode);
+    if ((gameMode > 0) && (gameMode < 3)) break;
+  }
+
 while (game == 0) {
 
   if (gameMode == 1) { // User selected Player vs Player game mode
-    printf("\n");
+    printf("\n \n");
     printf("You have selected the Player vs Player game mode.\n \n");
     printf("Enter the dimensions for your game.\n");
     printf("(An integer value greater or equal to 4)\n");
@@ -486,9 +565,9 @@ while (game == 0) {
     printf("\n");
     printf("__________________________");
     printf("\n \n");
-    char **matrix = (char**)malloc(numRows * sizeof(char *));
+    char **matrix = (char**)malloc((numRows + 1) * sizeof(char *));
     for (t = 1; t <= numRows; t++) {
-      matrix[t] = (char*)malloc(numCols * sizeof(char));
+      matrix[t] = (char*)malloc((numCols + 1) * sizeof(char));
     }
     makeBoard(numRows, numCols, matrix);
     printBoard(numRows, numCols, matrix);
@@ -503,12 +582,20 @@ while (game == 0) {
     printf("(Enter the integer value)\n\n");
     scanf("%d", &decision);
 
-    if (decision == 2) game++;
+    while ((decision < 1) || (decision > 2)) {
+      printf("Error: Enter a valid option: ");
+      scanf("%d", &decision);
+      if ((decision > 0) && (decision < 3)) break;
+    }
+
+    if (decision == 2) {
+      game = 1;
+    }
 
   }
 
   if (gameMode == 2) { // User selected Player vs Computer game mode
-    printf("\n");
+    printf("\n \n");
     printf("You have selected the Player vs Computer game mode.\n \n");
     printf("Please select the dimensions for your game.\n");
     printf("(An integer value greater or equal to 4)\n");
@@ -540,9 +627,9 @@ while (game == 0) {
     printf("\n");
     printf("________________________");
     printf("\n \n");
-    char **matrix = (char **)malloc(numRows * sizeof(char *));
+    char **matrix = (char **)malloc((numRows + 1) * sizeof(char *));
     for (t = 1; t <= numRows; t++) {
-      matrix[t] = (char *)malloc(numCols * sizeof(char));
+      matrix[t] = (char *)malloc((numCols + 1) * sizeof(char));
     }
     makeBoard(numRows, numCols, matrix);
     printBoard(numRows, numCols, matrix);
@@ -557,7 +644,16 @@ while (game == 0) {
     printf("(Enter the integer value)\n\n");
     scanf("%d", &decision);
 
-    if (decision == 2) game++;
+    while ((decision < 1) || (decision > 2)) {
+      printf("Error: Enter a valid option: ");
+      scanf("%d", &decision);
+      if ((decision > 0) && (decision < 3)) break;
+    }
+
+
+    if (decision == 2) {
+      game = 1;
+    }
 
 }
 }
