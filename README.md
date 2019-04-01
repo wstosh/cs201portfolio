@@ -24,7 +24,7 @@ This game follows traditional Connect Four rules:
 6) Once the game has ended, enter "1" to play another game, or enter "2" to exit the program.
 7) If you have chosen to play another game, continue from instruction 2.
 
-### VIDEO TUTORIAL
+### VIDEO TUTORIAL:
 
 
 
