@@ -26,6 +26,7 @@ This game follows traditional Connect Four rules:
 
 ### VIDEO TUTORIAL:
 
+https://www.youtube.com/watch?v=uXo5_Pe7pxw
 
 
 
