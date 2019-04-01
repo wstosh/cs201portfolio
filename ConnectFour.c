@@ -132,14 +132,6 @@ int gameOver(int rows, int cols, char** board) { // Function checks to see if a 
   return 0;
 }
 
-int validLocation(int move, int cols, char** board) { // Function checks to see if player move is a valid one
-
-  if (move < 1 || move > cols) return 2;              // Out of bounds check
-  if (board[1][move] == ' ') return 1;                // Is top row still empty?
-
-  return 2;
-}
-
 int nextOpenRow(int move, int rows, char** board) { // Function finds next open row in specified column
   int j = rows;
   while (board[j][move] != ' ') {
@@ -349,7 +341,6 @@ void ComputerGameplay(int rows, int cols, char** board) { // Function that contr
 int PlayerVsPlayer(int rows, int cols, char** board) { // Function that controls the Player vs Player gameplay
   int i = 0;                                           // Ultimately returns an integer value that corresponds to the winning player
   int move = 0;
-  int valid = 0;
   int winPlayerOne = 0;
   int winPlayerTwo = 0;
   char temp[100];
@@ -362,18 +353,18 @@ int PlayerVsPlayer(int rows, int cols, char** board) { // Function that controls
     else printf("Player 2, select a column number to place your piece: ");
     scanf("%s", temp);
     move = atoi(temp);
-    valid = validLocation(move, cols, board);
     printf("\n");
 
-    while (valid == 2) { // Loop executes if user selects an invalid location
+    while ((move < 1) || (move > cols) || (board[1][move] != ' ')) { // Loop executes if user selects an invalid location
       printf("Select a valid location: ");
       scanf("%s", temp);
       move = atoi(temp);
-      valid = validLocation(move, cols, board);
-      if (valid == 1) break;
+      if ((move > 0) && (move <= cols) && (board[1][move]) == ' ') break;
     }
 
-    j = nextOpenRow(move, cols, board);
+    while (board[j][move] != ' ') {
+       j--;
+     }
 
     if (i % 2 == 0) board[j][move] = playerOnePiece;
     else board[j][move] = playerTwoPiece;
@@ -406,7 +397,6 @@ int PlayerVsComputer(int rows, int cols, char** board) { // Function that contro
   int i = 0;                                             // Ultimately returns an integer value that corresponds to the winning player
   int j = 0;
   int move = 0;
-  int valid = 0;
   int winPlayer = 0;
   int winComp = 0;
   char temp[100];
@@ -420,18 +410,18 @@ int PlayerVsComputer(int rows, int cols, char** board) { // Function that contro
       printf("Select a column number to place your piece: ");
       scanf("%s", temp);
       move = atoi(temp);
-      valid = validLocation(move, cols, board);
       printf("\n");
 
-      while (valid == 2) {  // Loop executes if user selects an invalid location
+      while ((move < 1) || (move > cols) || (board[1][move] != ' ')) {  // Loop executes if user selects an invalid location
         printf("Select a valid location: ");
         scanf("%s", temp);
         move = atoi(temp);
-        valid = validLocation(move, cols, board);
-        if (valid == 1) break;
+        if ((move > 0) && (move <= cols) && (board[1][move]) == ' ') break;
       }
 
-      j = nextOpenRow(move, rows, board);
+      while (board[j][move] != ' ') {
+         j--;
+       }
 
       board[j][move] = playerPiece;
 
@@ -502,8 +492,8 @@ while (game == 0) {
     printf("\n \n");
     printf("You have selected the Player vs Player game mode.\n \n");
     printf("Enter the dimensions for your game.\n");
-    printf("(An integer value greater or equal to 4)\n");
-    printf("Entering large values (e.g. 30) may worsen the gameplay.\n \n");
+    printf("(An integer value greater than or equal to 4)\n");
+    printf("Entering large values (e.g. 40) may worsen the gameplay.\n \n");
     printf("Rows: ");
 
     scanf("%s", temp);
@@ -583,8 +573,8 @@ while (game == 0) {
     printf("\n \n");
     printf("You have selected the Player vs Computer game mode.\n \n");
     printf("Please select the dimensions for your game.\n");
-    printf("(An integer value greater or equal to 4)\n");
-    printf("Entering large values (e.g. 30) may worsen the gameplay.\n\n");
+    printf("(An integer value greater than or equal to 4)\n");
+    printf("Entering large values (e.g. 40) may worsen the gameplay.\n\n");
     printf("NOTE: The larger the dimensions of the board are, the longer the AI\nwill take to make a move\n\n");
     printf("Rows: ");
 
